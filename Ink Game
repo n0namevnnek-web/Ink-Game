@@ -39,5 +39,946 @@ end
 -------------------------------------------------------------------------------
 -- 👇 YOUR MAIN SCRIPT CODE STARTS HERE 👇
 -------------------------------------------------------------------------------
+--[[
+    NNVN Hub | Ink Game
+    Made by N0NAMEVN
+    Version: 1.0
+]]
 
+-- ===== LOAD RAYFIELD =====
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+if not Rayfield then
+    warn("Failed to load Rayfield")
+    return
+end
+
+-- ===== CREATE WINDOW =====
+local Window = Rayfield:CreateWindow({
+    Name = "NNVN Hub",
+    Theme = "Aqua",
+    ToggleUIKeybind = Enum.KeyCode.K,
+})
+
+-- ===== NOTIFICATION =====
+local function Notify(Text)
+    Rayfield:Notify({
+        Title = "NNVN Hub",
+        Content = Text,
+        Duration = 3,
+    })
+end
+
+-- ===== CREATE TABS =====
+local MainTab = Window:CreateTab("Main")
+local MiscTab = Window:CreateTab("Misc")
+local SettingsTab = Window:CreateTab("Settings")
+
+-- ============================================
+-- MAIN TAB
+-- ============================================
+
+MainTab:CreateSection("Green Light Red Light")
+
+MainTab:CreateButton({
+    Name = "Teleport to End",
+    Callback = function()
+        pcall(function()
+            local Workspace = game:GetService("Workspace")
+            local Players = game:GetService("Players")
+            local LocalPlayer = Players.LocalPlayer
+            
+            -- Kiểm tra tồn tại của RedLightGreenLight
+            if Workspace:FindFirstChild("RedLightGreenLight") then
+                local GLRL = Workspace.RedLightGreenLight
+                
+                -- Kiểm tra sand và crossedover
+                if GLRL:FindFirstChild("sand") then
+                    local sand = GLRL.sand
+                    
+                    if sand:FindFirstChild("crossedover") then
+                        local pos = sand.crossedover.Position + Vector3.new(0, 5, 0)
+                        
+                        -- Kiểm tra character và humanoidrootpart
+                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(pos, pos + Vector3.new(0, 0, -1))
+                            Notify("✅ Teleported to end!")
+                        else
+                            Notify("❌ Character not found!")
+                        end
+                    else
+                        Notify("❌ Cannot find crossedover!")
+                    end
+                else
+                    Notify("❌ Cannot find sand!")
+                end
+            else
+                Notify("❌ RedLightGreenLight not found!")
+            end
+        end)
+    end,
+})
+
+MainTab:CreateButton({
+    Name = "Help Player to End",
+    Callback = function()
+        pcall(function()
+            local Workspace = game:GetService("Workspace")
+            local Players = game:GetService("Players")
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local LocalPlayer = Players.LocalPlayer
+            
+            for _, v in pairs(Players:GetPlayers()) do
+                if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    local prompt = v.Character.HumanoidRootPart:FindFirstChild("CarryPrompt")
+                    
+                    if prompt and prompt.Enabled == true and not v.Character:FindFirstChild("SafeRedLightGreenLight") then
+                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            -- Teleport đến player cần help
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = v.Character.HumanoidRootPart.CFrame
+                            task.wait(0.3)
+                            
+                            -- Fire proximity prompt
+                            repeat 
+                                task.wait(0.1)
+                                fireproximityprompt(prompt)
+                            until prompt.Enabled == false
+                            
+                            task.wait(0.5)
+                            
+                            -- Teleport đến đích
+                            if Workspace:FindFirstChild("RedLightGreenLight") and Workspace.RedLightGreenLight:FindFirstChild("sand") and Workspace.RedLightGreenLight.sand:FindFirstChild("crossedover") then
+                                local pos = Workspace.RedLightGreenLight.sand.crossedover.Position + Vector3.new(0, 5, 0)
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(pos, pos + Vector3.new(0, 0, -1))
+                            end
+                            
+                            task.wait(0.4)
+                            
+                            -- Fire ClickedButton
+                            if ReplicatedStorage:FindFirstChild("Remotes") then
+                                local Remotes = ReplicatedStorage.Remotes
+                                if Remotes:FindFirstChild("ClickedButton") then
+                                    Remotes.ClickedButton:FireServer({tryingtoleave = true})
+                                    Notify("✅ Helped player to end!")
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end,
+})
+
+MainTab:CreateToggle({
+    Name = "Auto Help Player",
+    CurrentValue = false,
+    Flag = "AutoHelp",
+    Callback = function(v)
+        _G.AutoHelp = v
+        if v then
+            task.spawn(function()
+                while _G.AutoHelp do
+                    pcall(function()
+                        local Workspace = game:GetService("Workspace")
+                        local Players = game:GetService("Players")
+                        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                        local LocalPlayer = Players.LocalPlayer
+                        
+                        for _, p in pairs(Players:GetPlayers()) do
+                            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                                local prompt = p.Character.HumanoidRootPart:FindFirstChild("CarryPrompt")
+                                
+                                if prompt and prompt.Enabled == true and not p.Character:FindFirstChild("SafeRedLightGreenLight") then
+                                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                        LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+                                        task.wait(0.3)
+                                        
+                                        repeat 
+                                            task.wait(0.1)
+                                            fireproximityprompt(prompt)
+                                        until prompt.Enabled == false
+                                        
+                                        task.wait(0.5)
+                                        
+                                        if Workspace:FindFirstChild("RedLightGreenLight") then
+                                            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-75, 1025, 143)
+                                        end
+                                        
+                                        task.wait(0.4)
+                                        
+                                        if ReplicatedStorage:FindFirstChild("Remotes") then
+                                            local Remotes = ReplicatedStorage.Remotes
+                                            if Remotes:FindFirstChild("ClickedButton") then
+                                                Remotes.ClickedButton:FireServer({tryingtoleave = true})
+                                                break
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+        Notify(v and "Auto Help ON" or "Auto Help OFF")
+    end,
+})
+
+MainTab:CreateDivider()
+
+MainTab:CreateSection("Tug of War")
+
+MainTab:CreateToggle({
+    Name = "Auto Tug of War",
+    CurrentValue = false,
+    Flag = "AutoTug",
+    Callback = function(v)
+        _G.AutoTug = v
+        if v then
+            task.spawn(function()
+                while _G.AutoTug do
+                    pcall(function()
+                        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                        if ReplicatedStorage:FindFirstChild("Remotes") then
+                            local Remotes = ReplicatedStorage.Remotes
+                            if Remotes:FindFirstChild("TemporaryReachedBindable") then
+                                Remotes.TemporaryReachedBindable:FireServer({GameQTE = true})
+                            end
+                        end
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+        Notify(v and "Auto Tug ON" or "Auto Tug OFF")
+    end,
+})
+
+MainTab:CreateDivider()
+
+MainTab:CreateSection("Rebel")
+
+MainTab:CreateToggle({
+    Name = "Aimbot Guard",
+    CurrentValue = false,
+    Flag = "Aimbot",
+    Callback = function(v)
+        _G.Aimbot = v
+        if v then
+            task.spawn(function()
+                while _G.Aimbot do
+                    pcall(function()
+                        local Workspace = game:GetService("Workspace")
+                        local Players = game:GetService("Players")
+                        local LocalPlayer = Players.LocalPlayer
+                        
+                        if Workspace:FindFirstChild("Live") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            local DistanceMath, TargetNpc = math.huge, nil
+                            
+                            for _, npc in pairs(Workspace.Live:GetChildren()) do
+                                if (npc.Name:find("Guard") or npc.Name:find("Third")) and npc:FindFirstChild("Humanoid") and npc:FindFirstChild("HumanoidRootPart") and npc.Humanoid.Health > 0 then
+                                    local Distance = (LocalPlayer.Character.HumanoidRootPart.Position - npc.HumanoidRootPart.Position).Magnitude
+                                    if Distance < DistanceMath then
+                                        TargetNpc, DistanceMath = npc, Distance
+                                    end
+                                end
+                            end
+                            
+                            if TargetNpc and TargetNpc:FindFirstChild("Head") then
+                                Workspace.CurrentCamera.CFrame = CFrame.lookAt(Workspace.CurrentCamera.CFrame.Position, TargetNpc.Head.Position)
+                            end
+                        end
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+        Notify(v and "Aimbot ON" or "Aimbot OFF")
+    end,
+})
+
+MainTab:CreateToggle({
+    Name = "Infinite Ammo",
+    CurrentValue = false,
+    Flag = "InfAmmo",
+    Callback = function(v)
+        _G.InfAmmo = v
+        if v then
+            task.spawn(function()
+                while _G.InfAmmo do
+                    pcall(function()
+                        local Players = game:GetService("Players")
+                        local LocalPlayer = Players.LocalPlayer
+                        
+                        if LocalPlayer.Character then
+                            for _, child in pairs(LocalPlayer.Character:GetChildren()) do
+                                if child.Name == "InfoMP5Client" and child:FindFirstChild("Bullets") then
+                                    child.Bullets.Value = 999999999
+                                end
+                            end
+                        end
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+        Notify(v and "Inf Ammo ON" or "Inf Ammo OFF")
+    end,
+})
+
+MainTab:CreateDivider()
+
+MainTab:CreateSection("Other Games")
+
+MainTab:CreateButton({
+    Name = "Complete Dalgona",
+    Callback = function()
+        pcall(function()
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            
+            if ReplicatedStorage:FindFirstChild("Modules") then
+                local Modules = ReplicatedStorage.Modules
+                if Modules:FindFirstChild("Games") then
+                    local Games = Modules.Games
+                    if Games:FindFirstChild("DalgonaClient") then
+                        local DalgonaClientModule = Games.DalgonaClient
+                        
+                        for _, func in pairs(getreg()) do
+                            if typeof(func) == "function" and islclosure(func) then
+                                if getfenv(func).script == DalgonaClientModule and getinfo(func).nups == 73 then
+                                    setupvalue(func, 31, 9e9)
+                                    Notify("✅ Dalgona completed!")
+                                end
+                            end
+                        end
+                    else
+                        Notify("❌ DalgonaClient not found!")
+                    end
+                else
+                    Notify("❌ Games not found!")
+                end
+            else
+                Notify("❌ Modules not found!")
+            end
+        end)
+    end,
+})
+
+MainTab:CreateButton({
+    Name = "Glass Bridge Vision",
+    Callback = function()
+        pcall(function()
+            local Workspace = game:GetService("Workspace")
+            
+            if Workspace:FindFirstChild("GlassBridge") then
+                local GlassBridge = Workspace.GlassBridge
+                
+                if GlassBridge:FindFirstChild("GlassHolder") then
+                    local GlassHolder = GlassBridge.GlassHolder
+                    
+                    for _, v in pairs(GlassHolder:GetChildren()) do
+                        for _, j in pairs(v:GetChildren()) do
+                            if j:IsA("Model") and j.PrimaryPart then
+                                local Color = j.PrimaryPart:GetAttribute("exploitingisevil") and Color3.fromRGB(248, 87, 87) or Color3.fromRGB(28, 235, 87)
+                                j.PrimaryPart.Color = Color
+                                j.PrimaryPart.Transparency = 0
+                                j.PrimaryPart.Material = Enum.Material.Neon
+                            end
+                        end
+                    end
+                    Notify("✅ Glass Bridge Vision activated!")
+                else
+                    Notify("❌ GlassHolder not found!")
+                end
+            else
+                Notify("❌ GlassBridge not found!")
+            end
+        end)
+    end,
+})
+
+MainTab:CreateToggle({
+    Name = "Auto Mingle",
+    CurrentValue = false,
+    Flag = "AutoMingle",
+    Callback = function(v)
+        _G.AutoMingle = v
+        if v then
+            task.spawn(function()
+                while _G.AutoMingle do
+                    pcall(function()
+                        local Players = game:GetService("Players")
+                        local LocalPlayer = Players.LocalPlayer
+                        
+                        if LocalPlayer.Character then
+                            for _, child in ipairs(LocalPlayer.Character:GetChildren()) do
+                                if child.Name == "RemoteForQTE" then
+                                    child:FireServer()
+                                end
+                            end
+                        end
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+        Notify(v and "Auto Mingle ON" or "Auto Mingle OFF")
+    end,
+})
+
+-- ============================================
+-- MISC TAB
+-- ============================================
+
+MiscTab:CreateSection("Movement")
+
+MiscTab:CreateSlider({
+    Name = "Walk Speed",
+    CurrentValue = 20,
+    Min = 16,
+    Max = 500,
+    Flag = "Speed",
+    Callback = function(v)
+        _G.Speed = v
+        Notify("Speed: " .. tostring(v))
+    end,
+})
+
+MiscTab:CreateToggle({
+    Name = "Auto Speed",
+    CurrentValue = false,
+    Flag = "AutoSpeed",
+    Callback = function(v)
+        _G.AutoSpeed = v
+        if v then
+            task.spawn(function()
+                while _G.AutoSpeed do
+                    pcall(function()
+                        local Players = game:GetService("Players")
+                        local LocalPlayer = Players.LocalPlayer
+                        
+                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                            LocalPlayer.Character.Humanoid.WalkSpeed = _G.Speed or 50
+                        end
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+        Notify(v and "Auto Speed ON" or "Auto Speed OFF")
+    end,
+})
+
+MiscTab:CreateDivider()
+
+MiscTab:CreateSection("Fly")
+
+MiscTab:CreateSlider({
+    Name = "Fly Speed",
+    CurrentValue = 50,
+    Min = 20,
+    Max = 500,
+    Flag = "FlySpeed",
+    Callback = function(v)
+        _G.FlySpeed = v
+        Notify("Fly Speed: " .. tostring(v))
+    end,
+})
+
+MiscTab:CreateToggle({
+    Name = "Fly",
+    CurrentValue = false,
+    Flag = "Fly",
+    Callback = function(v)
+        _G.Fly = v
+        if v then
+            task.spawn(function()
+                local Players = game:GetService("Players")
+                local Workspace = game:GetService("Workspace")
+                local LocalPlayer = Players.LocalPlayer
+                local PlayerModule = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"))
+                local ControlModule = PlayerModule:WaitForChild("ControlModule")
+                
+                while _G.Fly do
+                    pcall(function()
+                        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        
+                        if hrp then
+                            if not hrp:FindFirstChild("BodyGyro") then
+                                local bg = Instance.new("BodyGyro", hrp)
+                                bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+                                bg.P = 9e4
+                                bg.CFrame = hrp.CFrame
+                            end
+                            
+                            if not hrp:FindFirstChild("BodyVelocity") then
+                                local bv = Instance.new("BodyVelocity", hrp)
+                                bv.Velocity = Vector3.new(0, 0, 0)
+                                bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+                            end
+                            
+                            local moveVec = ControlModule:GetMoveVector()
+                            local bg = hrp:FindFirstChild("BodyGyro")
+                            local bv = hrp:FindFirstChild("BodyVelocity")
+                            
+                            if bg and bv then
+                                bg.CFrame = CFrame.new(hrp.Position, hrp.Position + Workspace.CurrentCamera.CFrame.LookVector)
+                                bv.Velocity = Vector3.new()
+                                
+                                if moveVec.X ~= 0 then
+                                    bv.Velocity = bv.Velocity + Workspace.CurrentCamera.CFrame.RightVector * (moveVec.X * _G.FlySpeed)
+                                end
+                                if moveVec.Z ~= 0 then
+                                    bv.Velocity = bv.Velocity - Workspace.CurrentCamera.CFrame.LookVector * (moveVec.Z * _G.FlySpeed)
+                                end
+                            end
+                        end
+                    end)
+                    task.wait()
+                end
+                
+                local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    if hrp:FindFirstChild("BodyGyro") then hrp.BodyGyro:Destroy() end
+                    if hrp:FindFirstChild("BodyVelocity") then hrp.BodyVelocity:Destroy() end
+                end
+            end)
+        end
+        Notify(v and "Fly ON" or "Fly OFF")
+    end,
+})
+
+MiscTab:CreateDivider()
+
+MiscTab:CreateSection("Tools")
+
+MiscTab:CreateToggle({
+    Name = "Noclip",
+    CurrentValue = false,
+    Flag = "Noclip",
+    Callback = function(v)
+        _G.Noclip = v
+        if v then
+            task.spawn(function()
+                while _G.Noclip do
+                    pcall(function()
+                        local Players = game:GetService("Players")
+                        local LocalPlayer = Players.LocalPlayer
+                        
+                        if LocalPlayer.Character then
+                            for _, part in pairs(LocalPlayer.Character:GetChildren()) do
+                                if part:IsA("BasePart") then
+                                    part.CanCollide = false
+                                end
+                            end
+                        end
+                    end)
+                    task.wait()
+                end
+                
+                local Players = game:GetService("Players")
+                local LocalPlayer = Players.LocalPlayer
+                if LocalPlayer.Character then
+                    for _, part in pairs(LocalPlayer.Character:GetChildren()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = true
+                        end
+                    end
+                end
+            end)
+        end
+        Notify(v and "Noclip ON" or "Noclip OFF")
+    end,
+})
+
+MiscTab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Flag = "InfJump",
+    Callback = function(v)
+        _G.InfiniteJump = v
+        Notify(v and "Inf Jump ON" or "Inf Jump OFF")
+    end,
+})
+
+MiscTab:CreateToggle({
+    Name = "Camlock",
+    CurrentValue = false,
+    Flag = "Camlock",
+    Callback = function(v)
+        _G.Camlock = v
+        if v then
+            task.spawn(function()
+                while _G.Camlock do
+                    pcall(function()
+                        local Players = game:GetService("Players")
+                        local Workspace = game:GetService("Workspace")
+                        local LocalPlayer = Players.LocalPlayer
+                        
+                        local DistanceMath, Target = math.huge, nil
+                        
+                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            for _, p in pairs(Players:GetPlayers()) do
+                                if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+                                    local Dist = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                                    if Dist < DistanceMath then
+                                        Target, DistanceMath = p.Character, Dist
+                                    end
+                                end
+                            end
+                        end
+                        
+                        if Target and Target:FindFirstChild("HumanoidRootPart") then
+                            Workspace.CurrentCamera.CFrame = CFrame.lookAt(Workspace.CurrentCamera.CFrame.Position, Target.HumanoidRootPart.Position)
+                            if _G.TeleportPlayer and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = Target.HumanoidRootPart.CFrame
+                            end
+                        end
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+        Notify(v and "Camlock ON" or "Camlock OFF")
+    end,
+})
+
+MiscTab:CreateToggle({
+    Name = "Teleport to Player",
+    CurrentValue = false,
+    Flag = "TeleportPlayer",
+    Callback = function(v)
+        _G.TeleportPlayer = v
+        Notify(v and "Teleport ON" or "Teleport OFF")
+    end,
+})
+
+MiscTab:CreateDivider()
+
+MiscTab:CreateSection("Anti")
+
+MiscTab:CreateToggle({
+    Name = "Anti Lag",
+    CurrentValue = false,
+    Flag = "AntiLag",
+    Callback = function(v)
+        _G.AntiLag = v
+        if v then
+            pcall(function()
+                local Workspace = game:GetService("Workspace")
+                local Lighting = game:GetService("Lighting")
+                
+                local Terrain = Workspace:FindFirstChildOfClass("Terrain")
+                if Terrain then
+                    Terrain.WaterWaveSize = 0
+                    Terrain.WaterWaveSpeed = 0
+                    Terrain.WaterReflectance = 0
+                    Terrain.WaterTransparency = 1
+                end
+                
+                Lighting.GlobalShadows = false
+                Lighting.FogEnd = 9e9
+                Lighting.FogStart = 9e9
+                
+                for _, obj in pairs(game:GetDescendants()) do
+                    if obj:IsA("BasePart") then
+                        obj.Material = "Plastic"
+                        obj.Reflectance = 0
+                    elseif obj:IsA("Decal") then
+                        obj.Transparency = 1
+                    elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+                        obj.Lifetime = NumberRange.new(0)
+                    elseif obj:IsA("ForceField") or obj:IsA("Sparkles") or obj:IsA("Smoke") or obj:IsA("Fire") or obj:IsA("Beam") then
+                        obj:Destroy()
+                    end
+                end
+            end)
+        end
+        Notify(v and "Anti Lag ON" or "Anti Lag OFF")
+    end,
+})
+
+MiscTab:CreateToggle({
+    Name = "Anti Fling",
+    CurrentValue = false,
+    Flag = "AntiFling",
+    Callback = function(v)
+        _G.AntiFling = v
+        if v then
+            task.spawn(function()
+                while _G.AntiFling do
+                    pcall(function()
+                        local Players = game:GetService("Players")
+                        local LocalPlayer = Players.LocalPlayer
+                        
+                        for _, p in pairs(Players:GetPlayers()) do
+                            if p ~= LocalPlayer and p.Character then
+                                for _, part in pairs(p.Character:GetChildren()) do
+                                    if part:IsA("BasePart") then
+                                        part.CanCollide = false
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+        Notify(v and "Anti Fling ON" or "Anti Fling OFF")
+    end,
+})
+
+MiscTab:CreateDivider()
+
+MiscTab:CreateSection("Auto Collect")
+
+MiscTab:CreateToggle({
+    Name = "Auto Collect Bandage",
+    CurrentValue = false,
+    Flag = "AutoBandage",
+    Callback = function(v)
+        _G.AutoBandage = v
+        if v then
+            task.spawn(function()
+                while _G.AutoBandage do
+                    pcall(function()
+                        local Workspace = game:GetService("Workspace")
+                        local Players = game:GetService("Players")
+                        local LocalPlayer = Players.LocalPlayer
+                        
+                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            local OldCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+                            
+                            if not HasTool("Bandage") then
+                                repeat 
+                                    task.wait()
+                                    if Workspace:FindFirstChild("Effects") then
+                                        for _, item in pairs(Workspace.Effects:GetChildren()) do
+                                            if item.Name == "DroppedBandage" and item:FindFirstChild("Handle") then
+                                                LocalPlayer.Character.HumanoidRootPart.CFrame = item.Handle.CFrame
+                                                break
+                                            end
+                                        end
+                                    end
+                                until HasTool("Bandage")
+                                task.wait(0.3)
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = OldCFrame
+                            end
+                        end
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+        Notify(v and "Auto Bandage ON" or "Auto Bandage OFF")
+    end,
+})
+
+MiscTab:CreateToggle({
+    Name = "Auto Collect Flashbang",
+    CurrentValue = false,
+    Flag = "AutoFlash",
+    Callback = function(v)
+        _G.AutoFlash = v
+        if v then
+            task.spawn(function()
+                while _G.AutoFlash do
+                    pcall(function()
+                        local Workspace = game:GetService("Workspace")
+                        local Players = game:GetService("Players")
+                        local LocalPlayer = Players.LocalPlayer
+                        
+                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            local OldCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+                            
+                            if not HasTool("Flashbang") then
+                                repeat 
+                                    task.wait()
+                                    if Workspace:FindFirstChild("Effects") then
+                                        for _, item in pairs(Workspace.Effects:GetChildren()) do
+                                            if item.Name == "DroppedFlashbang" and item:FindFirstChild("Stun Grenade") then
+                                                LocalPlayer.Character.HumanoidRootPart.CFrame = item["Stun Grenade"].CFrame
+                                                break
+                                            end
+                                        end
+                                    end
+                                until HasTool("Flashbang")
+                                task.wait(0.3)
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = OldCFrame
+                            end
+                        end
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+        Notify(v and "Auto Flash ON" or "Auto Flash OFF")
+    end,
+})
+
+MiscTab:CreateToggle({
+    Name = "Auto Collect Grenade",
+    CurrentValue = false,
+    Flag = "AutoGrenade",
+    Callback = function(v)
+        _G.AutoGrenade = v
+        if v then
+            task.spawn(function()
+                while _G.AutoGrenade do
+                    pcall(function()
+                        local Workspace = game:GetService("Workspace")
+                        local Players = game:GetService("Players")
+                        local LocalPlayer = Players.LocalPlayer
+                        
+                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            local OldCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+                            
+                            if not HasTool("Grenade") then
+                                repeat 
+                                    task.wait()
+                                    if Workspace:FindFirstChild("Effects") then
+                                        for _, item in pairs(Workspace.Effects:GetChildren()) do
+                                            if item.Name == "DroppedGrenade" and item:FindFirstChild("Handle") then
+                                                LocalPlayer.Character.HumanoidRootPart.CFrame = item.Handle.CFrame
+                                                break
+                                            end
+                                        end
+                                    end
+                                until HasTool("Grenade")
+                                task.wait(0.3)
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = OldCFrame
+                            end
+                        end
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+        Notify(v and "Auto Grenade ON" or "Auto Grenade OFF")
+    end,
+})
+
+MiscTab:CreateDivider()
+
+MiscTab:CreateSection("Other")
+
+MiscTab:CreateToggle({
+    Name = "Auto Skip Dialogue",
+    CurrentValue = false,
+    Flag = "AutoSkip",
+    Callback = function(v)
+        _G.AutoSkip = v
+        if v then
+            task.spawn(function()
+                while _G.AutoSkip do
+                    pcall(function()
+                        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                        
+                        if ReplicatedStorage:FindFirstChild("Remotes") then
+                            local Remotes = ReplicatedStorage.Remotes
+                            
+                            if Remotes:FindFirstChild("DialogueRemote") then
+                                Remotes.DialogueRemote:FireServer("Skipped")
+                            end
+                            if Remotes:FindFirstChild("TemporaryReachedBindable") then
+                                Remotes.TemporaryReachedBindable:FireServer()
+                            end
+                        end
+                    end)
+                    task.wait(0.8)
+                end
+            end)
+        end
+        Notify(v and "Auto Skip ON" or "Auto Skip OFF")
+    end,
+})
+
+-- ============================================
+-- FUNCTIONS
+-- ============================================
+
+function HasTool(tool)
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    
+    if LocalPlayer.Character then
+        for _, v in pairs(LocalPlayer.Character:GetChildren()) do
+            if v:IsA("Tool") and v.Name == tool then
+                return true
+            end
+        end
+    end
+    
+    for _, v in pairs(LocalPlayer.Backpack:GetChildren()) do
+        if v:IsA("Tool") and v.Name == tool then
+            return true
+        end
+    end
+    
+    return false
+end
+
+-- ============================================
+-- SETTINGS TAB
+-- ============================================
+
+SettingsTab:CreateSection("Information")
+
+SettingsTab:CreateLabel("Script: NNVN Hub")
+SettingsTab:CreateLabel("Author: N0NAMEVN")
+SettingsTab:CreateLabel("Game: Ink Game")
+SettingsTab:CreateLabel("Version: 1.0")
+SettingsTab:CreateLabel("Menu Key: K")
+
+SettingsTab:CreateDivider()
+
+SettingsTab:CreateSection("Actions")
+
+SettingsTab:CreateButton({
+    Name = "Destroy UI",
+    Callback = function()
+        Rayfield:Destroy()
+    end,
+})
+
+SettingsTab:CreateButton({
+    Name = "Copy Discord",
+    Callback = function()
+        if setclipboard then
+            setclipboard("discord.gg/nnvn")
+            Notify("Copied Discord link!")
+        end
+    end,
+})
+
+-- ============================================
+-- KEYBIND HANDLERS
+-- ============================================
+
+local UserInputService = game:GetService("UserInputService")
+
+UserInputService.JumpRequest:Connect(function()
+    if _G.InfiniteJump then
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        
+        if LocalPlayer.Character then
+            local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:ChangeState("Jumping")
+            end
+        end
+    end
+end)
+
+-- ============================================
+-- STARTUP
+-- ============================================
+
+Notify("NNVN Hub Loaded! Made by N0NAMEVN")
 print(ProtectionConfig.HubName .. " Loaded Successfully!")
